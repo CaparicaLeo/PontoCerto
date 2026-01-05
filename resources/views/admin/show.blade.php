@@ -116,7 +116,7 @@
                         <i class="fas fa-clock text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-gray-500 text-sm">Total de Clocks</p>
+                        <p class="text-gray-500 text-sm">Total de Registros</p>
                         <p class="text-2xl font-bold text-gray-900">{{ $user->clocks->count() }}</p>
                     </div>
                 </div>
@@ -125,23 +125,29 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full bg-green-100 text-green-600">
-                        <i class="fas fa-sign-in-alt text-2xl"></i>
+                        <i class="fas fa-calendar-check text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-gray-500 text-sm">Check-ins</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $user->clocks->where('type', 'in')->count() }}</p>
+                        <p class="text-gray-500 text-sm">Este Mês</p>
+                        <p class="text-2xl font-bold text-gray-900">
+                            {{ $user->clocks->filter(function($clock) {
+                                return \Carbon\Carbon::parse($clock->date)->isCurrentMonth();
+                            })->count() }}
+                        </p>
                     </div>
                 </div>
             </div>
 
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center">
-                    <div class="p-3 rounded-full bg-red-100 text-red-600">
-                        <i class="fas fa-sign-out-alt text-2xl"></i>
+                    <div class="p-3 rounded-full bg-purple-100 text-purple-600">
+                        <i class="fas fa-hourglass-half text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-gray-500 text-sm">Check-outs</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $user->clocks->where('type', 'out')->count() }}</p>
+                        <p class="text-gray-500 text-sm">Hoje</p>
+                        <p class="text-2xl font-bold text-gray-900">
+                            {{ $user->clocks->where('date', now()->toDateString())->count() }}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -149,11 +155,22 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <div class="flex items-center">
                     <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                        <i class="fas fa-hourglass-half text-2xl"></i>
+                        <i class="fas fa-business-time text-2xl"></i>
                     </div>
                     <div class="ml-4">
-                        <p class="text-gray-500 text-sm">Este Mês</p>
-                        <p class="text-2xl font-bold text-gray-900">{{ $user->clocks->where('created_at', '>=', now()->startOfMonth())->count() }}</p>
+                        <p class="text-gray-500 text-sm">Horas Totais</p>
+                        <p class="text-2xl font-bold text-gray-900">
+                            @php
+                                $totalMinutes = 0;
+                                foreach($user->clocks as $clock) {
+                                    $start = \Carbon\Carbon::parse($clock->clock_in);
+                                    $end = \Carbon\Carbon::parse($clock->clock_out);
+                                    $totalMinutes += $start->diffInMinutes($end);
+                                }
+                                $hours = floor($totalMinutes / 60);
+                                echo $hours . 'h';
+                            @endphp
+                        </p>
                     </div>
                 </div>
             </div>
@@ -161,20 +178,19 @@
 
         <!-- Histórico de Clocks -->
         <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <div class="px-6 py-4 border-b border-gray-200 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <h2 class="text-xl font-bold text-gray-900">
                     <i class="fas fa-history text-indigo-600 mr-2"></i>
                     Histórico de Registros
                 </h2>
-                <div class="flex space-x-3">
+                <div class="flex flex-col sm:flex-row gap-3">
                     <input type="date" 
                            id="filterDate"
                            class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                    <select id="filterType" class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
-                        <option value="">Todos os tipos</option>
-                        <option value="in">Check-in</option>
-                        <option value="out">Check-out</option>
-                    </select>
+                    <input type="text"
+                           id="searchDescription"
+                           placeholder="Buscar descrição..."
+                           class="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500">
                 </div>
             </div>
 
@@ -183,16 +199,28 @@
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Data/Hora
+                                ID
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Tipo
+                                Data
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Localização
+                                Entrada
                             </th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Status
+                                Saída
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Duração
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Descrição
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Criado em
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                Atualizado em
                             </th>
                             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                                 Ações
@@ -200,59 +228,65 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200" id="clocksTableBody">
-                        @forelse($user->clocks->sortByDesc('created_at') as $clock)
+                        @forelse($user->clocks->sortByDesc('date') as $clock)
                         <tr class="hover:bg-gray-50 transition clock-row" 
-                            data-date="{{ $clock->created_at->format('Y-m-d') }}" 
-                            data-type="{{ $clock->type }}">
+                            data-date="{{ $clock->date }}" 
+                            data-description="{{ strtolower($clock->description ?? '') }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-xs font-mono text-gray-500" title="{{ $clock->id }}">
+                                    {{ substr($clock->id, 0, 8) }}...
+                                </span>
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <i class="fas fa-calendar-day text-gray-400 mr-2"></i>
-                                    <div>
-                                        <div class="text-sm font-medium text-gray-900">
-                                            {{ $clock->created_at->format('d/m/Y') }}
-                                        </div>
-                                        <div class="text-sm text-gray-500">
-                                            {{ $clock->created_at->format('H:i:s') }}
-                                        </div>
-                                    </div>
+                                    <span class="text-sm font-medium text-gray-900">
+                                        {{ \Carbon\Carbon::parse($clock->date)->format('d/m/Y') }}
+                                    </span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($clock->type === 'in')
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                    <i class="fas fa-sign-in-alt mr-1"></i> Check-in
+                                <span class="text-sm font-mono text-green-600 font-semibold">
+                                    {{ \Carbon\Carbon::parse($clock->clock_in)->format('H:i:s') }}
                                 </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-mono text-red-600 font-semibold">
+                                    {{ \Carbon\Carbon::parse($clock->clock_out)->format('H:i:s') }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-mono text-indigo-600 font-bold">
+                                    @php
+                                        $start = \Carbon\Carbon::parse($clock->clock_in);
+                                        $end = \Carbon\Carbon::parse($clock->clock_out);
+                                        $diff = $start->diff($end);
+                                        echo sprintf('%02d:%02d:%02d', $diff->h, $diff->i, $diff->s);
+                                    @endphp
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 max-w-xs">
+                                @if($clock->description)
+                                <div class="text-sm text-gray-600 truncate" title="{{ $clock->description }}">
+                                    {{ $clock->description }}
+                                </div>
                                 @else
-                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                    <i class="fas fa-sign-out-alt mr-1"></i> Check-out
-                                </span>
+                                <span class="text-sm text-gray-400 italic">—</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">
-                                    @if($clock->latitude && $clock->longitude)
-                                    <a href="https://www.google.com/maps?q={{ $clock->latitude }},{{ $clock->longitude }}" 
-                                       target="_blank" 
-                                       class="text-indigo-600 hover:text-indigo-900">
-                                        <i class="fas fa-map-marker-alt mr-1"></i>
-                                        Ver no mapa
-                                    </a>
-                                    @else
-                                    <span class="text-gray-400">Não disponível</span>
-                                    @endif
+                                <div class="text-xs text-gray-500">
+                                    {{ $clock->created_at->format('d/m/Y') }}
+                                    <div class="text-xs text-gray-400">{{ $clock->created_at->format('H:i') }}</div>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                    Registrado
-                                </span>
+                                <div class="text-xs text-gray-500">
+                                    {{ $clock->updated_at->format('d/m/Y') }}
+                                    <div class="text-xs text-gray-400">{{ $clock->updated_at->format('H:i') }}</div>
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button onclick="viewClockDetails({{ $clock->id }})" 
-                                        class="text-indigo-600 hover:text-indigo-900 mr-3" 
-                                        title="Ver detalhes">
-                                    <i class="fas fa-info-circle"></i>
-                                </button>
                                 <form method="POST" action="{{ route('admin.clocks.destroy', $clock->id) }}" class="inline">
                                     @csrf
                                     @method('DELETE')
@@ -267,7 +301,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="5" class="px-6 py-12 text-center">
+                            <td colspan="9" class="px-6 py-12 text-center">
                                 <i class="fas fa-clock text-gray-300 text-4xl mb-3"></i>
                                 <p class="text-gray-500">Nenhum registro de ponto encontrado</p>
                             </td>
@@ -279,82 +313,19 @@
         </div>
     </div>
 
-    <!-- Modal de Confirmação de Delete Usuário -->
-    <div id="deleteUserModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Confirmar Exclusão do Usuário</h3>
-                <div class="mt-2 px-7 py-3">
-                    <p class="text-sm text-gray-500">
-                        Tem certeza que deseja deletar o usuário <strong>{{ $user->name }}</strong>? 
-                        Esta ação irá deletar todos os registros de ponto associados e não pode ser desfeita.
-                    </p>
-                </div>
-                <div class="flex justify-center space-x-4 px-4 py-3">
-                    <button onclick="closeUserModal()" 
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                        Cancelar
-                    </button>
-                    <form id="deleteUserForm" method="POST" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" 
-                                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                            Deletar Usuário
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal de Confirmação de Delete Clock -->
-    <div id="deleteClockModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div class="mt-3 text-center">
-                <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                    <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
-                </div>
-                <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Confirmar Exclusão do Registro</h3>
-                <div class="mt-2 px-7 py-3">
-                    <p class="text-sm text-gray-500">
-                        Tem certeza que deseja deletar este registro de ponto? Esta ação não pode ser desfeita.
-                    </p>
-                </div>
-                <div class="flex justify-center space-x-4 px-4 py-3">
-                    <button onclick="closeClockModal()" 
-                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition">
-                        Cancelar
-                    </button>
-                    <form id="deleteClockForm" method="POST" class="inline">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" 
-                                class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition">
-                            Deletar Registro
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script>
-        // Filtro por data
+        // Filtro por data e descrição
         document.getElementById('filterDate').addEventListener('change', filterClocks);
-        document.getElementById('filterType').addEventListener('change', filterClocks);
+        document.getElementById('searchDescription').addEventListener('input', filterClocks);
 
         function filterClocks() {
             const dateFilter = document.getElementById('filterDate').value;
-            const typeFilter = document.getElementById('filterType').value;
+            const searchFilter = document.getElementById('searchDescription').value.toLowerCase();
             const rows = document.querySelectorAll('.clock-row');
 
             rows.forEach(row => {
                 const rowDate = row.getAttribute('data-date');
-                const rowType = row.getAttribute('data-type');
+                const rowDescription = row.getAttribute('data-description');
 
                 let showRow = true;
 
@@ -362,66 +333,13 @@
                     showRow = false;
                 }
 
-                if (typeFilter && rowType !== typeFilter) {
+                if (searchFilter && !rowDescription.includes(searchFilter)) {
                     showRow = false;
                 }
 
                 row.style.display = showRow ? '' : 'none';
             });
         }
-
-        // Modal de confirmação de delete usuário
-        function confirmDelete(userId) {
-            const modal = document.getElementById('deleteUserModal');
-            const form = document.getElementById('deleteUserForm');
-            form.action = `/admin/dashboard/${userId}`;
-            modal.classList.remove('hidden');
-            modal.style.display = 'block';
-        }
-
-        function closeUserModal() {
-            const modal = document.getElementById('deleteUserModal');
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-        }
-
-        // Modal de confirmação de delete clock
-        function confirmDeleteClock(clockId) {
-            const modal = document.getElementById('deleteClockModal');
-            const form = document.getElementById('deleteClockForm');
-            form.action = `/admin/clocks/${clockId}`;
-            modal.classList.remove('hidden');
-            modal.style.display = 'block';
-        }
-
-        function closeClockModal() {
-            const modal = document.getElementById('deleteClockModal');
-            modal.classList.add('hidden');
-            modal.style.display = 'none';
-        }
-
-        // Ver detalhes do clock
-        function viewClockDetails(clockId) {
-            // Implementar visualização de detalhes se necessário
-            alert('Detalhes do clock ID: ' + clockId);
-        }
-
-        // Fechar modais ao clicar fora
-        document.getElementById('deleteUserModal').addEventListener('click', function(e) {
-            if (e.target === this) closeUserModal();
-        });
-
-        document.getElementById('deleteClockModal').addEventListener('click', function(e) {
-            if (e.target === this) closeClockModal();
-        });
-
-        // Fechar modal com ESC
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeUserModal();
-                closeClockModal();
-            }
-        });
     </script>
 </body>
 </html>
