@@ -5,32 +5,170 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Dashboard Admin</title>
+    <title>Dashboard Admin - PontoCerto</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-gray-50">
     <!-- Navbar -->
-    <nav class="bg-white shadow-lg">
+    <nav class="bg-white shadow-lg fixed w-full top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
+                <!-- Logo e Brand -->
                 <div class="flex items-center">
-                    <i class="fas fa-shield-alt text-indigo-600 text-2xl mr-3"></i>
-                    <span class="text-xl font-bold text-gray-800">Admin Panel</span>
+                    <a href="{{ route('admin.users.index') }}" class="flex items-center group">
+                        <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3 group-hover:scale-110 transition shadow-lg">
+                            <i class="fas fa-crown text-white text-lg"></i>
+                        </div>
+                        <div>
+                            <span class="text-xl font-bold text-gray-800">PontoCerto</span>
+                            <span class="block text-xs text-purple-600 font-semibold">Admin Panel</span>
+                        </div>
+                    </a>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <span class="text-gray-600">{{ Auth::user()->name }}</span>
-                    <form method="POST" action="{{ route('logout') }}" class="inline">
-                        @csrf
-                        <button type="submit" class="text-gray-600 hover:text-gray-900">
-                            <i class="fas fa-sign-out-alt"></i> Sair
+
+                <!-- Menu Desktop -->
+                <div class="hidden md:flex items-center space-x-1">
+                    <a href="{{ route('admin.users.index') }}" 
+                       class="flex items-center px-4 py-2 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition font-medium {{ request()->routeIs('admin.users.index') ? 'bg-purple-50 text-purple-600' : '' }}">
+                        <i class="fas fa-users mr-2"></i>
+                        Usuários
+                    </a>
+                    
+                    <a href="{{ route('clocks.index') }}" 
+                       class="flex items-center px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition font-medium">
+                        <i class="fas fa-tachometer-alt mr-2"></i>
+                        Dashboard
+                    </a>
+
+                    <a href="{{ route('clocks.index') }}" 
+                       class="flex items-center px-4 py-2 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition font-medium">
+                        <i class="fas fa-clock mr-2"></i>
+                        Registros
+                    </a>
+                </div>
+
+                <!-- User Menu -->
+                <div class="flex items-center" x-data="{ open: false }">
+                    <!-- Desktop User Menu -->
+                    <div class="hidden md:block relative">
+                        <button @click="open = !open" 
+                                class="flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-50 transition">
+                            <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                                <span class="text-white font-bold text-sm">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                                </span>
+                            </div>
+                            <div class="text-left">
+                                <p class="text-sm font-semibold text-gray-700">{{ Auth::user()->name }}</p>
+                                <p class="text-xs text-purple-600 font-medium">
+                                    <i class="fas fa-shield-alt mr-1"></i>Administrador
+                                </p>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-sm transition" :class="{'rotate-180': open}"></i>
                         </button>
-                    </form>
+
+                        <!-- Dropdown Menu -->
+                        <div x-show="open" 
+                             @click.away="open = false"
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-2"
+                             style="display: none;">
+                            
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <p class="text-sm font-semibold text-gray-900">{{ Auth::user()->name }}</p>
+                                <p class="text-xs text-gray-500 truncate">{{ Auth::user()->email }}</p>
+                            </div>
+
+                            <a href="{{ route('profile.edit') }}" 
+                               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                <i class="fas fa-user-circle mr-3 text-gray-400"></i>
+                                Meu Perfil
+                            </a>
+
+                            <a href="{{ route('clocks.index') }}" 
+                               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                <i class="fas fa-tachometer-alt mr-3 text-gray-400"></i>
+                                Dashboard Usuário
+                            </a>
+
+                            <div class="border-t border-gray-100 my-2"></div>
+
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" 
+                                        class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                                    <i class="fas fa-sign-out-alt mr-3"></i>
+                                    Sair
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Mobile Menu Button -->
+                    <button @click="open = !open" 
+                            class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition">
+                        <i class="fas fa-bars text-gray-600 text-xl"></i>
+                    </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div x-show="open" 
+             @click.away="open = false"
+             x-transition
+             class="md:hidden border-t border-gray-100 bg-white"
+             style="display: none;">
+            <div class="px-4 py-4 space-y-2">
+                <a href="{{ route('admin.users.index') }}" 
+                   class="flex items-center px-4 py-3 text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-lg transition font-medium {{ request()->routeIs('admin.users.index') ? 'bg-purple-50 text-purple-600' : '' }}">
+                    <i class="fas fa-users mr-3"></i>
+                    Usuários
+                </a>
+                
+                <a href="{{ route('clocks.index') }}" 
+                   class="flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition font-medium">
+                    <i class="fas fa-tachometer-alt mr-3"></i>
+                    Dashboard
+                </a>
+
+                <a href="{{ route('clocks.index') }}" 
+                   class="flex items-center px-4 py-3 text-gray-700 hover:bg-indigo-50 hover:text-indigo-600 rounded-lg transition font-medium">
+                    <i class="fas fa-clock mr-3"></i>
+                    Registros
+                </a>
+
+                <a href="{{ route('profile.edit') }}" 
+                   class="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition font-medium">
+                    <i class="fas fa-user-circle mr-3"></i>
+                    Meu Perfil
+                </a>
+
+                <div class="border-t border-gray-100 my-2"></div>
+
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" 
+                            class="w-full flex items-center px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition font-medium">
+                        <i class="fas fa-sign-out-alt mr-3"></i>
+                        Sair
+                    </button>
+                </form>
             </div>
         </div>
     </nav>
 
+    <!-- Spacer para compensar a navbar fixa -->
+    <div class="h-16"></div>
+
+    <!-- Conteúdo Principal -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Header com Stats -->
         <div class="mb-8">
@@ -48,7 +186,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full bg-green-100 text-green-600">
@@ -60,7 +197,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="bg-white rounded-lg shadow p-6">
                     <div class="flex items-center">
                         <div class="p-3 rounded-full bg-purple-100 text-purple-600">
