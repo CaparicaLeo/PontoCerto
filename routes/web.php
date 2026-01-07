@@ -1,4 +1,5 @@
 <?php
+
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ClockController;
@@ -28,6 +29,8 @@ Route::middleware(['auth', 'is_admin'])->group(function () {
     Route::get('/admin/dashboard/{id}', [AdminController::class, 'show'])->name('admin.users.show');
     Route::delete('/admin/dashboard/{id}', [AdminController::class, 'destroy'])->name('admin.users.destroy');
     Route::delete('/admin/clocks/{id}', [AdminController::class, 'destroyClock'])->name('admin.clocks.destroy');
+    Route::get('/pdf/usuarios', [App\Http\Controllers\PdfController::class, 'generateAllUsersPdf'])
+        ->name('pdf.usuarios');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
