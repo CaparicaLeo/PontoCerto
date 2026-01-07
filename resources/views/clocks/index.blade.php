@@ -127,14 +127,21 @@
 
         <!-- Lista de Registros -->
         <div class="bg-white rounded-lg shadow overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h2 class="text-xl font-bold text-gray-900">
-                    <i class="fas fa-history text-indigo-600 mr-2"></i>
-                    Histórico de Registros
-                </h2>
-                <a href="{{ route('pdf.pessoal', $user->id) }}" class="btn btn-primary" target="_blank">
-                    Imprimir Relatório PDF
-                </a>
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-gray-900">
+                        <i class="fas fa-history text-indigo-600 mr-2"></i>
+                        Histórico de Registros
+                    </h2>
+                </div>
+                <div>
+                    <a href="{{ route('pdf.pessoal', $user->id) }}"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition shadow-lg font-semibold text-sm"
+                        target="_blank">
+                        <i class="fas fa-file-pdf"></i>
+                        Gerar Relatório PDF
+                    </a>
+                </div>
             </div>
 
             @if ($clocks->count() > 0)
