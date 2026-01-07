@@ -20,6 +20,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/clocks/{id}/edit', [ClockController::class, 'edit'])->name('clocks.edit');
     Route::put('/clocks/{id}', [ClockController::class, 'update'])->name('clocks.update');
     Route::delete('/clocks/{id}', [ClockController::class, 'destroy'])->name('clocks.destroy');
+    Route::get('pdf/pessoal/{user}', [App\Http\Controllers\PdfController::class, 'generatePersonalPdf'])->name('pdf.pessoal');
 });
 
 Route::middleware(['auth', 'is_admin'])->group(function () {

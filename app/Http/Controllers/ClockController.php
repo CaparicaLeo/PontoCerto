@@ -19,7 +19,7 @@ class ClockController extends Controller
             ->orderByDesc('created_at')
             ->paginate(15);
 
-        return view('clocks.index', compact('clocks'));
+        return view('clocks.index', compact('clocks', 'user'));
     }
 
     public function store(Request $request)
